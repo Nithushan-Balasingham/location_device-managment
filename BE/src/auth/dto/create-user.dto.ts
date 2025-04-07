@@ -1,18 +1,26 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
-import { Entity } from 'typeorm';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
-@Entity()
 export class CreateUserDto {
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsString()
+  @IsNotEmpty()
   @MinLength(6)
   password: string;
 
+  @IsOptional()
   @IsString()
   hashedRt?: string;
 }
