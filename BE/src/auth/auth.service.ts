@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon from 'argon2';
@@ -143,9 +144,20 @@ export class AuthService {
     };
   }
 
-  findAll() {
-    return this.usersRepo.find({
-      relations: ['locations', 'locations.devices'],
+  async findOne(id: number, userId: number) {
+    if (id !== userId) {
+      throw new ForbiddenException('You are not authorized ');
+    }
+
+    const user = await this.usersRepo.findOne({
+      where: { id },
+      relations: ['locations'],
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }

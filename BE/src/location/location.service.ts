@@ -1,26 +1,66 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Location } from './entities/location.entity';
 
 @Injectable()
 export class LocationService {
-  create(createLocationDto: CreateLocationDto) {
-    return 'This action adds a new location';
+  constructor(
+    @InjectRepository(Location)
+    private locationRepo: Repository<Location>,
+  ) {}
+  async create(dto: CreateLocationDto, userId: number): Promise<Location> {
+    const location = this.locationRepo.create({
+      ...dto,
+      user: { id: userId },
+    });
+
+    return this.locationRepo.save(location);
   }
 
   findAll() {
-    return `This action returns all location`;
+    return this.locationRepo.find({ relations: ['devices'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} location`;
+  async findOne(id: number) {
+    const location = await this.locationRepo.findOne({
+      where: { id },
+      relations: ['devices'],
+    });
+    if (!location) {
+      throw new NotFoundException('Location not found');
+    }
+    return this.locationRepo.findOne({ where: { id } });
   }
 
-  update(id: number, updateLocationDto: UpdateLocationDto) {
-    return `This action updates a #${id} location`;
+  async update(id: number, updateLocationDto: UpdateLocationDto) {
+    if (!id) {
+      throw new NotFoundException('Location is not found');
+    }
+
+    const existingLocation = await this.locationRepo.findOne({
+      where: { id },
+    });
+
+    if (!existingLocation) {
+      throw new NotFoundException('Location not found');
+    }
+    Object.assign(existingLocation, updateLocationDto);
+    return this.locationRepo.save(existingLocation);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} location`;
+  async remove(id: number) {
+    if (!id) {
+      throw new NotFoundException('Location is not found');
+    }
+    const location = await this.locationRepo.findOne({ where: { id } });
+
+    if (!location) {
+      throw new NotFoundException('Location not found');
+    }
+    await this.locationRepo.delete(id);
+    return { message: 'Location deleted successfully' };
   }
 }

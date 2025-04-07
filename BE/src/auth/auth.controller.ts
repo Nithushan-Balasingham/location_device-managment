@@ -4,7 +4,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -48,9 +50,14 @@ export class AuthController {
     return this.authService.refreshTokens(userId, refreshToken);
   }
 
+  @Get(':id')
   @UseGuards(RtGuard)
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  async findOne(
+    @Param('id') id: number,
+    @Request() req: { user: { sub: number } },
+  ) {
+    const userId: number = req.user.sub;
+
+    return this.authService.findOne(id, userId);
   }
 }
