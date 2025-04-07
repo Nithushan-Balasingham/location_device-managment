@@ -7,21 +7,29 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { RtGuard } from '../auth/common/guards/rt.guard';
+import { Observable, of } from 'rxjs';
+import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 
 @Controller('device')
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
-  @Post()
-  @UseGuards(RtGuard)
-  create(@Body() createDeviceDto: CreateDeviceDto) {
-    return this.deviceService.create(createDeviceDto);
-  }
+  // @Post()
+  // @UseGuards(RtGuard)
+  // create(@Body() createDeviceDto: CreateDeviceDto) {
+  //   return this.deviceService.create(createDeviceDto);
+  // }
 
   @Get()
   findAll() {

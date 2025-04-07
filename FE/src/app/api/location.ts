@@ -1,13 +1,10 @@
-// utils/api.js
 
 import axios from 'axios';
 
-// Create an Axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8080',  // Base URL for your API
+  baseURL: 'http://localhost:8080', 
 });
 
-// Function to fetch location with Bearer token
 export const fetchLocation = async (token:string) => {
   try {
     const res = await api.get('/location', {
@@ -18,5 +15,18 @@ export const fetchLocation = async (token:string) => {
     return res;
   } catch (error) {
     throw new Error('Error fetching location: ' + error.message);
+  }
+};
+export const addLocation = async (token: string, values: any) => {
+  try {
+    const response = await api.post('/location', values, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data; // Returning the response data (if any)
+  } catch (error) {
+    throw new Error('Error adding location: ' + error.message);
   }
 };

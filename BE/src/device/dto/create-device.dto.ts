@@ -23,6 +23,8 @@ export class CreateDeviceDto {
   @IsString()
   image?: string;
 
+  @IsString()
+  imagePath?: string;
   @IsOptional()
   @IsEnum(DeviceStatus)
   status?: DeviceStatus;

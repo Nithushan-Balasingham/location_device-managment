@@ -1,14 +1,16 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
+  NotFoundException, Inject
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Device } from './entities/device.entity';
 import { Location } from '../location/entities/location.entity';
+import { Image } from 'src/images/entities/image.entity';
+import { ImageService } from 'src/images/image.service';
 
 @Injectable()
 export class DeviceService {
@@ -37,7 +39,7 @@ export class DeviceService {
   //   await this.deviceRepo.save(device);
   //   return { message: 'Device is added successfully successfully' };
   // }
-  async create(dto: CreateDeviceDto): Promise<Device> {
+  async create(dto: CreateDeviceDto, ): Promise<Device> {
     const device = this.deviceRepo.create(dto);
     return await this.deviceRepo.save(device);
   }

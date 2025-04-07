@@ -1,5 +1,6 @@
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Image } from '../../images/entities/image.entity';
 import { Location } from '../../location/entities/location.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Device {
@@ -20,4 +21,8 @@ export class Device {
 
   @ManyToOne(() => Location, (location) => location.devices)
   location: Location;
+
+  @OneToOne(() => Image)
+  @JoinColumn()
+  thumbnail: Image;
 }
