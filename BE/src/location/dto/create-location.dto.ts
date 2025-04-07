@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsString, IsEnum, IsNotEmpty, IsArray } from 'class-validator';
+import { CreateDeviceDto } from 'src/device/dto/create-device.dto';
 
 export class CreateLocationDto {
   @IsString()
@@ -12,4 +13,7 @@ export class CreateLocationDto {
   @IsNotEmpty()
   @IsEnum(['Active', 'InActive'])
   status: 'Active' | 'InActive';
+
+  @IsArray()
+  deviceDto: CreateDeviceDto[];
 }
