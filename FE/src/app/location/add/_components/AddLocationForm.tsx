@@ -52,6 +52,9 @@ const AddLocationForm = () => {
     },
   });
   const router = useRouter();
+  const handleRouteBack=()=>{
+    router.push("/dashboard")
+  }
   const { control, setValue, watch } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -120,10 +123,14 @@ const AddLocationForm = () => {
 
   return (
     <div className="flex min-h-[90vh] items-center justify-center w-full flex-col">
+      <div className="m-4"> 
       <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
         Add Location
       </h2>
-
+    <Button variant="contained" color="error" onClick={handleRouteBack} className="m-2">
+    ⬅️ Go Back
+    </Button>
+      </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-8 flex flex-col w-[50%]"
@@ -223,8 +230,6 @@ const AddLocationForm = () => {
                   )}
                 />
               </FormControl>
-
-              {/* Image Upload Field */}
               <div>
                 <label htmlFor={`deviceDto[${index}][file]`}>
                   Upload Image
@@ -252,7 +257,8 @@ const AddLocationForm = () => {
 
         <Button
           type="button"
-          variant="outlined"
+          variant="contained"
+          color="success"
           onClick={() =>
             append({ serialNumber: "", type: "pos", status: "Active" })
           }

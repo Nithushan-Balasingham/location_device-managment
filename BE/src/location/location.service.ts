@@ -4,7 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Location } from './entities/location.entity';
 import { DeviceService } from 'src/device/device.service';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { deleteFile } from 'src/common/utils/file-utils';
 import { Device } from 'src/device/entities/device.entity';
 
@@ -60,15 +64,21 @@ export class LocationService {
     return await this.deviceService.findBySerialNumber(serialNumber);
   }
   async findAll(): Promise<Location[]> {
-    const locations = await this.locationRepo.find({ relations: ['devices'] });
+    const locations = await this.locationRepo.find({
+      relations: ['devices'],
+      order: { id: 'ASC' }, 
+    });
 
     return locations.map((location) => {
-      location.devices = location.devices.map((device) => {
-        if (device.image) {
-          device.image = `http://localhost:8080/${device.image}`;
-        }
-        return device;
-      });
+      location.devices = location.devices
+        .map((device) => {
+          if (device.image) {
+            device.image = `http://localhost:8080/${device.image}`;
+          }
+          return device;
+        })
+        .sort((a, b) => a.id - b.id); 
+
       return location;
     });
   }

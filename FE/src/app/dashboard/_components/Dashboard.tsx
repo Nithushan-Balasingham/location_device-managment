@@ -1,10 +1,12 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { fetchLocation } from "@/app/api/location";
+import { deleteLocation, fetchLocation } from "@/app/api/location";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import DialogBoxLocation from "@/components/DialogBoxLocation/DialogBoxLocation";
+import Swal from "sweetalert2";
 
 interface LocationData {
   id: number;
@@ -29,7 +31,15 @@ export default function Dashboard() {
   const session = useSession();
   const token = session.data?.refreshToken;
   const router = useRouter();
+  const [openDialog, setOpenDialog] = useState<number | null>(null);
 
+  const handleClickOpen = (id: number) => {
+    setOpenDialog(id);
+  };
+
+  const handleClose = () => {
+    setOpenDialog(null);
+  };
   useEffect(() => {
     const getLocation = async () => {
       if (token) {
@@ -44,7 +54,29 @@ export default function Dashboard() {
     };
 
     getLocation();
-  }, [token]);
+  }, [token, openDialog]);
+  const handleDelete = (id: number) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This location will be permanently deleted!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        console.log(`Deleting location with ID: ${id}`);
+        deleteLocation(id, token);
+        setLocation((prevLocations) => {
+          if (prevLocations) {
+            return prevLocations.filter((loc) => loc.id !== id);
+          }
+          return null;
+        });
+        Swal.fire("Deleted!", "Your location has been deleted.", "success");
+      }
+    });
+  };
 
   if (error) return <div className="text-red-500">Error: {error}</div>;
   if (!location) return <div className="text-gray-500">Loading...</div>;
@@ -67,17 +99,38 @@ export default function Dashboard() {
             key={loc.id}
             className="bg-white p-6 rounded-lg shadow-lg border border-gray-200"
           >
-          <div className="flex justify-between items-start mb-4">
-          <div className="mb-4">
-              <h2 className="text-2xl font-semibold text-gray-800">
-                Location : {loc.title}
-              </h2>
-              <div className="text-sm text-gray-500">
-                Address: {loc.address}
+            <div className="flex justify-between items-start mb-4">
+              <div className="mb-4">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  Location : {loc.title}
+                </h2>
+                <div className="text-sm text-gray-500">
+                  Address: {loc.address}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => handleClickOpen(loc.id)}
+                >
+                  🖊️
+                </div>
+                <div
+                  className="cursor-pointer"
+                  onClick={() => handleDelete(loc.id)}
+                >
+                  ❌
+                </div>
               </div>
             </div>
-            <div className="cursor-pointer"> 🖊️</div>
-          </div>
+
+            {openDialog === loc.id && (
+              <DialogBoxLocation
+                open={true}
+                onClose={handleClose}
+                locationId={loc.id}
+              />
+            )}
 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -91,7 +144,12 @@ export default function Dashboard() {
                 </p>
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-700">Devices:</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-700">
+                    Devices:
+                  </h3>
+                  <div>➕</div>
+                </div>
                 {loc.devices && loc.devices.length > 0 ? (
                   <div className="space-y-4 mt-2">
                     {loc.devices.map((device) => (
@@ -100,7 +158,6 @@ export default function Dashboard() {
                         className="bg-gray-50 p-4 rounded-lg flex items-start justify-between shadow-sm border border-gray-200"
                       >
                         <div>
-                          {" "}
                           <h4 className="text-xl font-semibold text-gray-800">
                             {device.name}
                           </h4>
@@ -113,8 +170,12 @@ export default function Dashboard() {
                           <p className="text-sm text-gray-600">
                             Type: {device.type}
                           </p>
-                          {/* <Image src={`${device.image}`} alt={device.type} width={50} height={50} className="mt-2" /> */}
-                          <Image src={device.image} alt="Image" width={200} height={200} />
+                          <Image
+                            src={device.image}
+                            alt="Image"
+                            width={200}
+                            height={200}
+                          />
                         </div>
                         <div className="cursor-pointer">✏️</div>
                       </div>
