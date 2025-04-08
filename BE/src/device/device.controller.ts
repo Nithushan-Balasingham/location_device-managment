@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { DeviceService } from './device.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
@@ -16,7 +17,7 @@ import { UpdateDeviceDto } from './dto/update-device.dto';
 import { RtGuard } from '../auth/common/guards/rt.guard';
 import { Observable, of } from 'rxjs';
 import { diskStorage } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
 import * as path from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -25,12 +26,53 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class DeviceController {
   constructor(private readonly deviceService: DeviceService) {}
 
-  // @Post()
-  // @UseGuards(RtGuard)
-  // create(@Body() createDeviceDto: CreateDeviceDto) {
-  //   return this.deviceService.create(createDeviceDto);
-  // }
+  @Post()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: undefined, 
+    }),
+  )
+  async createDevice(
+    @Body() dto: CreateDeviceDto & { locationId: number },
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    try {
+      if (!dto.locationId) {
+        throw new BadRequestException('Location ID is required');
+      }
 
+      const existingDevice = await this.deviceService.findBySerialNumber(
+        dto.serialNumber,
+      );
+      if (existingDevice) {
+        throw new BadRequestException(
+          `A device with serial number '${dto.serialNumber}' already exists.`,
+        );
+      }
+
+      if (file) {
+        const filename = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join('uploads/devices', filename);
+
+        fs.writeFileSync(filePath, file.buffer);
+
+        dto.image = `uploads/devices/${filename}`;
+      }
+
+      return await this.deviceService.createWithLocation(dto);
+    } catch (error) {
+      console.error('Error creating device:', error);
+
+      if (file && dto.image) {
+        const filePath = path.join(process.cwd(), dto.image);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+
+      throw error;
+    }
+  }
   @Get()
   findAll() {
     return this.deviceService.findAll();

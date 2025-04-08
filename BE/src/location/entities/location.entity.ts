@@ -22,7 +22,10 @@ export class Location {
   @Column({ default: 'Active' })
   status: 'Active' | 'InActive';
 
-  @OneToMany(() => Device, (device) => device.location, { cascade: true })
+  @OneToMany(() => Device, (device) => device.location, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  }) 
   devices: Device[];
 
   @ManyToOne(() => User, (user) => user.locations, {

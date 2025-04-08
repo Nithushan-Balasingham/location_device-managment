@@ -13,11 +13,13 @@ export class Device {
   type: 'pos' | 'kiosk' | 'signage';
 
   @Column({ nullable: true })
-  image: string; // Store the file path here
+  image: string;
 
   @Column({ default: 'Active' })
   status: 'Active' | 'InActive';
 
-  @ManyToOne(() => Location, (location) => location.devices)
+  @ManyToOne(() => Location, (location) => location.devices, {
+    onDelete: 'CASCADE',
+  })
   location: Location;
 }

@@ -20,9 +20,40 @@ export class DeviceService {
     @InjectRepository(Location)
     private locationRepo: Repository<Location>,
   ) {}
+  async createWithLocation(
+    dto: CreateDeviceDto & { locationId: number },
+  ): Promise<Device> {
+    try {
+      const location = await this.locationRepo.findOne({
+        where: { id: dto.locationId },
+      });
+      if (!location) {
+        throw new BadRequestException(
+          `Location with ID '${dto.locationId}' not found.`,
+        );
+      }
 
+      const device = this.deviceRepo.create({
+        ...dto,
+        location, 
+      });
+
+      return await this.deviceRepo.save(device);
+    } catch (error) {
+      console.error('Error creating device with location:', error);
+      throw error;
+    }
+  }
   async create(dto: CreateDeviceDto): Promise<Device> {
     try {
+      const existingDevice = await this.deviceRepo.findOne({
+        where: { serialNumber: dto.serialNumber },
+      });
+      if (existingDevice) {
+        throw new BadRequestException(
+          `A device with serial number '${dto.serialNumber}' already exists.`,
+        );
+      }
       const device = this.deviceRepo.create(dto);
       return await this.deviceRepo.save(device);
     } catch (error) {
@@ -33,7 +64,9 @@ export class DeviceService {
   findAll() {
     return this.deviceRepo.find({ relations: ['location'] });
   }
-
+  async findBySerialNumber(serialNumber: string): Promise<Device | null> {
+    return await this.deviceRepo.findOne({ where: { serialNumber } });
+  }
   async findOne(id: number) {
     const device = await this.deviceRepo.findOne({
       where: { id },

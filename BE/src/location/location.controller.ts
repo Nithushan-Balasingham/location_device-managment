@@ -8,7 +8,6 @@ import {
   Delete,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
   UploadedFiles,
 } from '@nestjs/common';
 import { LocationService } from './location.service';
@@ -16,12 +15,7 @@ import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { RtGuard } from '../auth/common/guards/rt.guard';
 import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorator';
-import { AtGuard } from 'src/auth/common/guards';
-import { Observable, of } from 'rxjs';
-import { diskStorage } from 'multer';
-import { v4 as uuidv4 } from 'uuid';
-import * as path from 'path';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import {  FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('location')
 export class LocationController {

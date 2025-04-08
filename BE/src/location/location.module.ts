@@ -11,6 +11,7 @@ import { FileUploadModule } from 'src/file-upload/file-upload.module';
     TypeOrmModule.forFeature([Location]),
     DeviceModule,
     FileUploadModule,
+    
   ],
   providers: [LocationService],
   controllers: [LocationController],
