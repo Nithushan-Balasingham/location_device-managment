@@ -38,6 +38,8 @@ DB_PASSWORD= "DATABASE_PASSWORD"
 DB_DATABASE= "DATABASE_NAME"
 
 
+
+```
 ## Installation Instructions for FE
 
 Follow these steps to set up the project:
