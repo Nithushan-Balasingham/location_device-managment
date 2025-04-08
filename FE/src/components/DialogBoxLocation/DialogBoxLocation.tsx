@@ -1,16 +1,11 @@
-import * as React from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { fetchSingleLocation, updateLocation } from "@/app/api/location";
-import { cn } from "@/lib/utils";
-import { set } from "react-hook-form";
 import {
   FormControl,
   InputLabel,
@@ -20,6 +15,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
+import { useEffect, useState } from "react";
 
 interface FormDialogProps {
   open: boolean;
@@ -33,14 +29,13 @@ export default function DialogBoxLocation({
   locationId,
 }: FormDialogProps) {
   console.log(locationId);
-  const [title, setTitle] = React.useState("");
-  const [status, setStatus] = React.useState("");
-  const [address, setAddress] = React.useState("");
+  const [title, setTitle] = useState("");
+  const [status, setStatus] = useState("");
+  const [address, setAddress] = useState("");
   const session = useSession();
   const token = session.data?.refreshToken;
-  const router = useRouter();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const getLocation = async () => {
       if (token) {
         try {
@@ -49,10 +44,14 @@ export default function DialogBoxLocation({
           setStatus(res.data.status);
           setAddress(res.data.address);
           console.log(res.data);
-        } catch (error) {
-          console.error(error.message);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+              console.error(error.message);
+            } else {
+              console.error("An unknown error occurred");
+            }
+          }
         }
-      }
     };
 
     getLocation();
@@ -69,7 +68,7 @@ export default function DialogBoxLocation({
       status: status,
     };
     try {
-      const res = await updateLocation(locationId, data, token);
+       await updateLocation(locationId, data, token);
       toast.success("Location updated successfully");
       onClose();
     } catch (error: unknown) {
@@ -98,7 +97,9 @@ export default function DialogBoxLocation({
           onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             const formData = new FormData(event.currentTarget);
-            const formJson = Object.fromEntries((formData as any).entries());
+            const formJson = Object.fromEntries(
+              Array.from(formData.entries()) as [string, FormDataEntryValue][]
+            );
             const email = formJson.email;
             console.log(email);
             onClose();

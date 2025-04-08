@@ -55,18 +55,21 @@ export class LocationService {
     const location = this.locationRepo.create({
       ...dto,
       devices,
-      user: { id: userId },
+      user: { id: userId }, 
     });
 
     return await this.locationRepo.save(location);
   }
+
   async findBySerialNumber(serialNumber: string): Promise<Device | null> {
     return await this.deviceService.findBySerialNumber(serialNumber);
   }
-  async findAll(): Promise<Location[]> {
+
+  async findAll(userId: number): Promise<Location[]> {
     const locations = await this.locationRepo.find({
+      where: { user: { id: userId } },
       relations: ['devices'],
-      order: { id: 'ASC' }, 
+      order: { id: 'ASC' },
     });
 
     return locations.map((location) => {
@@ -77,46 +80,52 @@ export class LocationService {
           }
           return device;
         })
-        .sort((a, b) => a.id - b.id); 
+        .sort((a, b) => a.id - b.id);
 
       return location;
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number): Promise<Location> {
     const location = await this.locationRepo.findOne({
-      where: { id },
+      where: { id, user: { id: userId } }, 
       relations: ['devices'],
     });
+
     if (!location) {
       throw new NotFoundException('Location not found');
     }
-    return this.locationRepo.findOne({ where: { id } });
+
+    location.devices = location.devices.map((device) => {
+      if (device.image) {
+        device.image = `http://localhost:8080/${device.image}`;
+      }
+      return device;
+    });
+
+    return location;
   }
 
-  async update(id: number, updateLocationDto: UpdateLocationDto) {
-    if (!id) {
-      throw new NotFoundException('Location is not found');
-    }
-
+  async update(
+    id: number,
+    updateLocationDto: UpdateLocationDto,
+    userId: number,
+  ) {
     const existingLocation = await this.locationRepo.findOne({
-      where: { id },
+      where: { id, user: { id: userId } }, 
     });
 
     if (!existingLocation) {
       throw new NotFoundException('Location not found');
     }
+
     Object.assign(existingLocation, updateLocationDto);
     return this.locationRepo.save(existingLocation);
   }
 
-  async remove(id: number) {
-    if (!id) {
-      throw new NotFoundException('Location is not found');
-    }
-
+  async remove(id: number, userId: number) {
     const location = await this.locationRepo.findOne({
-      where: { id },
+      where: { id, user: { id: userId } }, 
       relations: ['devices'],
     });
 

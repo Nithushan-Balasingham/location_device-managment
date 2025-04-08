@@ -11,12 +11,12 @@ import {
   FormControl,
   CircularProgress,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { addLocation } from "@/app/api/location";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";  
+import { AxiosError } from "axios";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -52,9 +52,9 @@ const AddLocationForm = () => {
     },
   });
   const router = useRouter();
-  const handleRouteBack=()=>{
-    router.push("/dashboard")
-  }
+  const handleRouteBack = () => {
+    router.push("/dashboard");
+  };
   const { control, setValue, watch } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -63,6 +63,16 @@ const AddLocationForm = () => {
   const session = useSession();
   const token = session.data?.refreshToken;
   const [loading, setLoading] = useState(false);
+  const MAX_DEVICES = 10;
+
+  const handleAddDevice = () => {
+    if (fields.length >= MAX_DEVICES) {
+      toast.error("You can only add up to 10 devices.");
+      return;
+    }
+    append({ serialNumber: "", type: "pos", status: "Active" });
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
@@ -97,8 +107,15 @@ const AddLocationForm = () => {
         router.push("/dashboard");
       }, 2000);
 
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
       console.log("API Response:", data);
 
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+      console.log("API Response:", data);
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
@@ -123,13 +140,18 @@ const AddLocationForm = () => {
 
   return (
     <div className="flex min-h-[90vh] items-center justify-center w-full flex-col">
-      <div className="m-4"> 
-      <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Add Location
-      </h2>
-    <Button variant="contained" color="error" onClick={handleRouteBack} className="m-2">
-    ⬅️ Go Back
-    </Button>
+      <div className="m-4">
+        <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          Add Location
+        </h2>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleRouteBack}
+          className="m-2"
+        >
+          ⬅️ Go Back
+        </Button>
       </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -137,6 +159,7 @@ const AddLocationForm = () => {
       >
         <TextField
           label="Title"
+          required
           variant="outlined"
           fullWidth
           {...form.register("title")}
@@ -147,6 +170,7 @@ const AddLocationForm = () => {
         <TextField
           label="Address"
           variant="outlined"
+          required
           fullWidth
           {...form.register("address")}
           error={!!form.formState.errors.address}
@@ -181,6 +205,7 @@ const AddLocationForm = () => {
                 label="Serial Number"
                 variant="outlined"
                 fullWidth
+                required
                 {...form.register(`deviceDto.${index}.serialNumber`)}
                 error={!!form.formState.errors.deviceDto?.[index]?.serialNumber}
                 helperText={
@@ -230,8 +255,11 @@ const AddLocationForm = () => {
                   )}
                 />
               </FormControl>
-              <div>
-                <label htmlFor={`deviceDto[${index}][file]`}>
+              <div className="flex flex-col items-start space-y-2">
+                <label
+                  htmlFor={`deviceDto[${index}][file]`}
+                  className="text-lg font-semibold text-gray-700"
+                >
                   Upload Image
                 </label>
                 <input
@@ -240,6 +268,10 @@ const AddLocationForm = () => {
                   name={`deviceDto[${index}][file]`}
                   id={`deviceDto[${index}][file]`}
                   accept="image/*"
+                  className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 
+                  file:rounded-lg file:border-0 file:text-sm file:font-semibold 
+                  file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -248,20 +280,24 @@ const AddLocationForm = () => {
                 variant="outlined"
                 onClick={() => handleRemove(index)}
                 className="mt-2"
+                disabled={fields.length <= 1}
               >
                 Remove Device
               </Button>
             </div>
           );
         })}
-
+        {fields.length >= MAX_DEVICES && (
+          <div className="text-red-400 text-center">
+            You can only add up to 10 max devices
+          </div>
+        )}
         <Button
           type="button"
           variant="contained"
           color="success"
-          onClick={() =>
-            append({ serialNumber: "", type: "pos", status: "Active" })
-          }
+          onClick={handleAddDevice}
+          disabled={fields.length >= MAX_DEVICES}
         >
           Add Device
         </Button>
@@ -270,7 +306,7 @@ const AddLocationForm = () => {
           type="submit"
           variant="contained"
           color="primary"
-          disabled={loading}
+          disabled={loading || fields.length > MAX_DEVICES}
           className="mt-6"
         >
           {loading ? <CircularProgress size={24} /> : "Submit"}

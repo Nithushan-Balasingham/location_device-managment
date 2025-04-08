@@ -67,15 +67,21 @@ export class DeviceService {
   async findBySerialNumber(serialNumber: string): Promise<Device | null> {
     return await this.deviceRepo.findOne({ where: { serialNumber } });
   }
-  async findOne(id: number) {
+  async findOne(id: number): Promise<Device> {
     const device = await this.deviceRepo.findOne({
       where: { id },
       relations: ['location'],
     });
+  
     if (!device) {
       throw new NotFoundException('Device not found');
     }
-    return this.deviceRepo.findOne({ where: { id } });
+  
+    if (device.image) {
+      device.image = `http://localhost:8080/${device.image}`;
+    }
+  
+    return device;
   }
 
   async update(
@@ -87,7 +93,16 @@ export class DeviceService {
     if (!device) {
       throw new Error('Device not found');
     }
-
+    if (dto.serialNumber && dto.serialNumber !== device.serialNumber) {
+    const existingDevice = await this.deviceRepo.findOne({
+      where: { serialNumber: dto.serialNumber },
+    });
+    if (existingDevice) {
+      throw new BadRequestException(
+        `A device with serial number '${dto.serialNumber}' already exists.`,
+      );
+    }
+  }
     if (file && device.image) {
       console.log(`Deleting old image: ${device.image}`);
       deleteFile(device.image);
@@ -103,18 +118,7 @@ export class DeviceService {
     return await this.deviceRepo.save(device);
   }
 
-  async remove(id: number) {
-    if (!id) {
-      throw new NotFoundException('Device is not found');
-    }
-    const Device = await this.deviceRepo.findOne({ where: { id } });
 
-    if (!Device) {
-      throw new NotFoundException('Device not found');
-    }
-    await this.deviceRepo.delete(id);
-    return { message: 'Device is deleted successfully' };
-  }
 
   async delete(deviceId: number): Promise<void> {
     const device = await this.deviceRepo.findOne({ where: { id: deviceId } });

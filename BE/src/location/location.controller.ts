@@ -31,6 +31,9 @@ export class LocationController {
     @GetCurrentUserId() userId: number,
   ) {
     console.log('Files received:', files);
+    if (!dto.deviceDto) {
+      throw new BadRequestException('Device data is missing.');
+    }
     for (const deviceDto of dto.deviceDto) {
       const existingDevice = await this.locationService.findBySerialNumber(
         deviceDto.serialNumber,
@@ -46,14 +49,14 @@ export class LocationController {
 
   @Get()
   @UseGuards(RtGuard)
-  findAll() {
-    return this.locationService.findAll();
+  findAll(@GetCurrentUserId() userId: number) {
+    return this.locationService.findAll(userId);
   }
 
   @Get(':id')
   @UseGuards(RtGuard)
-  findOne(@Param('id') id: number) {
-    return this.locationService.findOne(+id);
+  findOne(@Param('id') id: number, @GetCurrentUserId() userId: number) {
+    return this.locationService.findOne(+id, userId);
   }
 
   @Patch(':id')
@@ -61,13 +64,14 @@ export class LocationController {
   update(
     @Param('id') id: number,
     @Body() updateLocationDto: UpdateLocationDto,
+    @GetCurrentUserId() userId: number,
   ) {
-    return this.locationService.update(+id, updateLocationDto);
+    return this.locationService.update(+id, updateLocationDto, userId);
   }
 
   @Delete(':id')
   @UseGuards(RtGuard)
-  remove(@Param('id') id: number) {
-    return this.locationService.remove(+id);
+  remove(@Param('id') id: number, @GetCurrentUserId() userId: number) {
+    return this.locationService.remove(+id, userId);
   }
 }
