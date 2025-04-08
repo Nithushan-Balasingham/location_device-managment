@@ -9,13 +9,14 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  BadRequestException,
 } from '@nestjs/common';
 import { LocationService } from './location.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { RtGuard } from '../auth/common/guards/rt.guard';
 import { GetCurrentUserId } from '../auth/decorators/get-current-user-id.decorator';
-import {  FilesInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('location')
 export class LocationController {
@@ -23,14 +24,23 @@ export class LocationController {
 
   @Post()
   @UseGuards(RtGuard)
-  @UseInterceptors(FilesInterceptor('file')) 
-  create(
+  @UseInterceptors(FilesInterceptor('file'))
+  async create(
     @Body() dto: CreateLocationDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
     @GetCurrentUserId() userId: number,
   ) {
-    console.log('Files received:', files); 
-
+    console.log('Files received:', files);
+    for (const deviceDto of dto.deviceDto) {
+      const existingDevice = await this.locationService.findBySerialNumber(
+        deviceDto.serialNumber,
+      );
+      if (existingDevice) {
+        throw new BadRequestException(
+          `A device with serial number '${deviceDto.serialNumber}' already exists.`,
+        );
+      }
+    }
     return this.locationService.create(dto, files, userId);
   }
 

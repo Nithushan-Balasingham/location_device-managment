@@ -6,6 +6,7 @@ import { Location } from './entities/location.entity';
 import { DeviceService } from 'src/device/device.service';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { deleteFile } from 'src/common/utils/file-utils';
+import { Device } from 'src/device/entities/device.entity';
 
 @Injectable()
 export class LocationService {
@@ -55,7 +56,9 @@ export class LocationService {
 
     return await this.locationRepo.save(location);
   }
-
+  async findBySerialNumber(serialNumber: string): Promise<Device | null> {
+    return await this.deviceService.findBySerialNumber(serialNumber);
+  }
   async findAll(): Promise<Location[]> {
     const locations = await this.locationRepo.find({ relations: ['devices'] });
 

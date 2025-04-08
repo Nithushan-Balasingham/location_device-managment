@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { addLocation } from "@/app/api/location";
 import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";  
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -72,7 +73,10 @@ const AddLocationForm = () => {
       formData.append("status", values.status);
 
       values.deviceDto.forEach((device, index) => {
-        formData.append(`deviceDto[${index}][serialNumber]`, device.serialNumber);
+        formData.append(
+          `deviceDto[${index}][serialNumber]`,
+          device.serialNumber
+        );
         formData.append(`deviceDto[${index}][type]`, device.type);
         formData.append(`deviceDto[${index}][status]`, device.status);
 
@@ -84,22 +88,26 @@ const AddLocationForm = () => {
         }
       });
 
-      const response = await addLocation(token,formData);
+      const data = await addLocation(formData, token);
+      toast.success("Location added successfully!");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
 
+      console.log("API Response:", data);
 
-      if (response.ok) {
-        const data = await response.json();
-        toast.success("Location added successfully!");
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 2000);
-        console.log("API Response:", data);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+      console.log("API Response:", data);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response?.data?.message) {
+        toast.error(`Errors: ${error.response.data.message}`);
+      } else if (error instanceof Error) {
+        toast.error(`Error: ${error.message || "An unknown error occurred."}`);
       } else {
-        console.error("Error:", response.statusText);
-        toast.error("Failed to add location.");
+        toast.error("An unknown error occurred.");
       }
-    } catch (error) {
-      toast.error(`Error: ${error.message}`);
       console.error("Error:", error);
     } finally {
       setLoading(false);
@@ -216,9 +224,13 @@ const AddLocationForm = () => {
                 />
               </FormControl>
 
+              {/* Image Upload Field */}
               <div>
-                <label htmlFor={`deviceDto[${index}][file]`}>Upload Image</label>
+                <label htmlFor={`deviceDto[${index}][file]`}>
+                  Upload Image
+                </label>
                 <input
+                  required
                   type="file"
                   name={`deviceDto[${index}][file]`}
                   id={`deviceDto[${index}][file]`}
