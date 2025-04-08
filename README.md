@@ -66,4 +66,7 @@ NEXT_PUBLIC_API_URL="http://localhost:8080"
 
 
 
+```
+## Recorded Loom Link
+https://www.loom.com/share/74f2e320fb8942dc9e3e811e439c83f8?sid=627413d7-00eb-4e2d-99be-8b3aa2000d0a
 
