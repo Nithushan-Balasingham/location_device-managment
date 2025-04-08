@@ -48,6 +48,7 @@ export default function Dashboard() {
   const [openDialog, setOpenDialog] = useState<number | null>(null);
   const [openDialogDevice, setOpenDialogDevice] = useState<number | null>(null);
   const [refresh, setRefresh] = useState(false);
+
   const MAX_DEVICES = 10;
   const handleClickOpen = (id: number) => {
     setOpenDialog(id);
@@ -56,6 +57,7 @@ export default function Dashboard() {
     setRefresh((prev) => !prev);
     setOpenDialog(null);
   }, []);
+
   const handleNavigateAddDevice = (id: number) => {
     router.push(`/device/add/${id}`);
   };
@@ -65,8 +67,9 @@ export default function Dashboard() {
   };
 
   const handleCloseDevice = () => {
-    setOpenDialogDevice(null);
+    setOpenDialogDevice(null); 
   };
+
   useEffect(() => {
     const getLocation = async () => {
       if (token) {
@@ -237,13 +240,13 @@ export default function Dashboard() {
                             <h4 className="text-xl font-semibold text-gray-800">
                               {device.name}
                             </h4>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-md text-gray-600">
                               Serial Number: {device.serialNumber}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              Status: {device.status}
+                            <p className="text-md text-gray-600">
+                              Status: {device.status ===  "Active" ? (<span className="text-blue-400">Active</span>) : (<span className="text-red-500">In Active</span>)}
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-md text-gray-600">
                               Type: {device.type}
                             </p>
                             <Image
@@ -266,15 +269,16 @@ export default function Dashboard() {
                             >
                               ❌
                             </div>
-                          </div>
-
-                          {openDialogDevice === device.id && (
+                            {openDialogDevice === device.id && (
                             <DialogBoxDevice
                               open={true}
                               onClose={handleCloseDevice}
                               deviceID={device.id}
                             />
                           )}
+                          </div>
+
+                        
                         </div>
                       ))}
                     </div>

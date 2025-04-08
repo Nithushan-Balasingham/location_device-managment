@@ -4,13 +4,10 @@ import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { fetchSingleLocation, updateLocation } from "@/app/api/location";
-import { cn } from "@/lib/utils";
-import { set } from "react-hook-form";
+;
 import {
   FormControl,
   InputLabel,
@@ -40,7 +37,7 @@ export default function DialogBoxDevice({
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
   const [deviceImg, setDeviceImg] = useState("");
-  const [newImage, setNewImage] = useState<File | null>(null); // State for the new image
+  const [newImage, setNewImage] = useState<File | null>(null);
   const session = useSession();
   const token = session.data?.refreshToken;
   const router = useRouter();
@@ -75,7 +72,7 @@ export default function DialogBoxDevice({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setNewImage(file); // Update the new image state
+    setNewImage(file); 
   };
 
   const updateDeviceSubmit = async () => {
@@ -93,12 +90,11 @@ export default function DialogBoxDevice({
     }
 
     try {
-      const res = await updateDevice(deviceID, formData, token);
+      await updateDevice(deviceID, formData, token);
       toast.success("Device updated successfully");
       onClose();
     } catch (error: unknown) {
         if (error instanceof AxiosError) {
-                // Check if the error response contains the 'serial number already exists' message
             if (error.response?.data?.message) {
               toast.error(`Error updating device: ${error.response.data.message}`);
             } else {
@@ -113,25 +109,12 @@ export default function DialogBoxDevice({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={onClose} // Ensure this is correctly passed
       sx={{
         "& .MuiDialog-container": {
           "& .MuiPaper-root": {
             width: "100%",
             maxWidth: "500px",
-          },
-        },
-      }}
-      slotProps={{
-        paper: {
-          component: "form",
-          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            const formJson = Object.fromEntries((formData as any).entries());
-            const email = formJson.email;
-            console.log(email);
-            onClose();
           },
         },
       }}
@@ -206,7 +189,7 @@ export default function DialogBoxDevice({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>Cancel</Button> {/* Ensure this calls onClose */}
         <Button type="submit" onClick={updateDeviceSubmit}>
           Update
         </Button>
