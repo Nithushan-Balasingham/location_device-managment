@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 import { auth } from "./lib/auth"
 
-const protectedRoutes = ["/dashboard"]
-
+const protectedRoutes = [
+  "/dashboard",
+  "/location/add",
+  "/device/add", 
+]
 
 export default auth((req) => {
   console.log("object")
