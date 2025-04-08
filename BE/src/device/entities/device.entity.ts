@@ -1,5 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Image } from '../../images/entities/image.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Location } from '../../location/entities/location.entity';
 
 @Entity()
@@ -19,10 +18,8 @@ export class Device {
   @Column({ default: 'Active' })
   status: 'Active' | 'InActive';
 
-  @ManyToOne(() => Location, (location) => location.devices)
+  @ManyToOne(() => Location, (location) => location.devices, {
+    onDelete: 'CASCADE',
+  })
   location: Location;
-
-  @OneToOne(() => Image)
-  @JoinColumn()
-  thumbnail: Image;
 }

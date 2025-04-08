@@ -25,7 +25,7 @@ const config: NextAuthConfig = {
       },
       async authorize(credentials): Promise<User | null> {
         try {
-          const res = await fetch(`${process.env.API_BASE_URL}/users/login`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -11,11 +11,12 @@ import {
   FormControl,
   CircularProgress,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import { addLocation } from "@/app/api/location";
 import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -51,6 +52,9 @@ const AddLocationForm = () => {
     },
   });
   const router = useRouter();
+  const handleRouteBack = () => {
+    router.push("/dashboard");
+  };
   const { control, setValue, watch } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -59,6 +63,16 @@ const AddLocationForm = () => {
   const session = useSession();
   const token = session.data?.refreshToken;
   const [loading, setLoading] = useState(false);
+  const MAX_DEVICES = 10;
+
+  const handleAddDevice = () => {
+    if (fields.length >= MAX_DEVICES) {
+      toast.error("You can only add up to 10 devices.");
+      return;
+    }
+    append({ serialNumber: "", type: "pos", status: "Active" });
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
     try {
@@ -66,14 +80,54 @@ const AddLocationForm = () => {
         throw new Error("No token found. Please log in again.");
       }
 
-      const data = await addLocation(token, values);
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("address", values.address);
+      formData.append("status", values.status);
+
+      values.deviceDto.forEach((device, index) => {
+        formData.append(
+          `deviceDto[${index}][serialNumber]`,
+          device.serialNumber
+        );
+        formData.append(`deviceDto[${index}][type]`, device.type);
+        formData.append(`deviceDto[${index}][status]`, device.status);
+
+        const fileInput = document.querySelector(
+          `input[name="deviceDto[${index}][file]"]`
+        ) as HTMLInputElement;
+        if (fileInput?.files?.[0]) {
+          formData.append("file", fileInput.files[0]);
+        }
+      });
+
+      const data = await addLocation(formData, token);
       toast.success("Location added successfully!");
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
       console.log("API Response:", data);
-    } catch (error) {
-      toast.error(`Error: ${error.message}`);
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+      console.log("API Response:", data);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+      console.log("API Response:", data);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError && error.response?.data?.message) {
+        toast.error(`Errors: ${error.response.data.message}`);
+      } else if (error instanceof Error) {
+        toast.error(`Error: ${error.message || "An unknown error occurred."}`);
+      } else {
+        toast.error("An unknown error occurred.");
+      }
       console.error("Error:", error);
     } finally {
       setLoading(false);
@@ -86,16 +140,26 @@ const AddLocationForm = () => {
 
   return (
     <div className="flex min-h-[90vh] items-center justify-center w-full flex-col">
-      <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Add Location
-      </h2>
-
+      <div className="m-4">
+        <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+          Add Location
+        </h2>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleRouteBack}
+          className="m-2"
+        >
+          ⬅️ Go Back
+        </Button>
+      </div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-8 flex flex-col w-[50%]"
       >
         <TextField
           label="Title"
+          required
           variant="outlined"
           fullWidth
           {...form.register("title")}
@@ -106,6 +170,7 @@ const AddLocationForm = () => {
         <TextField
           label="Address"
           variant="outlined"
+          required
           fullWidth
           {...form.register("address")}
           error={!!form.formState.errors.address}
@@ -140,6 +205,7 @@ const AddLocationForm = () => {
                 label="Serial Number"
                 variant="outlined"
                 fullWidth
+                required
                 {...form.register(`deviceDto.${index}.serialNumber`)}
                 error={!!form.formState.errors.deviceDto?.[index]?.serialNumber}
                 helperText={
@@ -189,25 +255,49 @@ const AddLocationForm = () => {
                   )}
                 />
               </FormControl>
+              <div className="flex flex-col items-start space-y-2">
+                <label
+                  htmlFor={`deviceDto[${index}][file]`}
+                  className="text-lg font-semibold text-gray-700"
+                >
+                  Upload Image
+                </label>
+                <input
+                  required
+                  type="file"
+                  name={`deviceDto[${index}][file]`}
+                  id={`deviceDto[${index}][file]`}
+                  accept="image/*"
+                  className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 
+                  file:rounded-lg file:border-0 file:text-sm file:font-semibold 
+                  file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
               <Button
                 type="button"
                 variant="outlined"
                 onClick={() => handleRemove(index)}
                 className="mt-2"
+                disabled={fields.length <= 1}
               >
                 Remove Device
               </Button>
             </div>
           );
         })}
-
+        {fields.length >= MAX_DEVICES && (
+          <div className="text-red-400 text-center">
+            You can only add up to 10 max devices
+          </div>
+        )}
         <Button
           type="button"
-          variant="outlined"
-          onClick={() =>
-            append({ serialNumber: "", type: "pos", status: "Active" })
-          }
+          variant="contained"
+          color="success"
+          onClick={handleAddDevice}
+          disabled={fields.length >= MAX_DEVICES}
         >
           Add Device
         </Button>
@@ -216,7 +306,7 @@ const AddLocationForm = () => {
           type="submit"
           variant="contained"
           color="primary"
-          disabled={loading}
+          disabled={loading || fields.length > MAX_DEVICES}
           className="mt-6"
         >
           {loading ? <CircularProgress size={24} /> : "Submit"}

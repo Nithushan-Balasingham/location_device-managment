@@ -1,4 +1,11 @@
-import { IsString, IsEnum, IsNotEmpty, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNotEmpty,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { CreateDeviceDto } from 'src/device/dto/create-device.dto';
 
 export class CreateLocationDto {
@@ -15,5 +22,7 @@ export class CreateLocationDto {
   status: 'Active' | 'InActive';
 
   @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateDeviceDto)
   deviceDto: CreateDeviceDto[];
 }

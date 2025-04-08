@@ -9,8 +9,7 @@ import { LocationModule } from './location/location.module';
 import { DeviceModule } from './device/device.module';
 import { Location } from './location/entities/location.entity';
 import { Device } from './device/entities/device.entity';
-import { FileController } from './file.controller';
-import { Image } from './images/entities/image.entity';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -24,7 +23,7 @@ import { Image } from './images/entities/image.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Location, Device,Image],
+        entities: [User, Location, Device],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -32,6 +31,7 @@ import { Image } from './images/entities/image.entity';
     AuthModule,
     LocationModule,
     DeviceModule,
+    FileUploadModule,
     // MulterModule.register({
     //   dest: './uploads',
     // }),
