@@ -20,6 +20,9 @@ cd BE
 # 2. Install dependencies
 npm i
 
+# 3. Create DB in postgresql
+
+
 # 5. Start the development server
 npm run start:dev
 ```
@@ -52,7 +55,7 @@ cd FE
 # 2. Install dependencies
 npm i
 
-# 5. Start the development server
+# 3. Start the development server
 npm run dev
 ```
 
