@@ -19,6 +19,7 @@ cd BE
 
 # 2. Install dependencies
 npm i
+DB_DATABASE= "DATABASE_NAME"
 
 # 3. Create DB in postgresql
 
