@@ -9,6 +9,7 @@
 - **PostgreSQL** 
 
 ## Installation Instructions for BE
+## Please note that the app isn't hosted yet, so you'll need to run it locally to access it
 
 Follow these steps to set up the project:
 
