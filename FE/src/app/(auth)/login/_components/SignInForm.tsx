@@ -105,7 +105,6 @@ const ProfileForm = () => {
         email: values.email,
         password: values.password,
       });
-
       if (res?.error === "CredentialsSignin") {
         setLoading(false);
         return toast.error("Invalid Credentials");

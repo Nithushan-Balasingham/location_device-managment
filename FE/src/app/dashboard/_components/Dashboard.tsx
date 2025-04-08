@@ -1,6 +1,6 @@
 "use client";
 import { signOut, useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { deleteLocation, fetchLocation } from "@/app/api/location";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -52,9 +52,10 @@ export default function Dashboard() {
   const handleClickOpen = (id: number) => {
     setOpenDialog(id);
   };
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
+    setRefresh((prev) => !prev);
     setOpenDialog(null);
-  };
+  }, []);
   const handleNavigateAddDevice = (id: number) => {
     router.push(`/device/add/${id}`);
   };
