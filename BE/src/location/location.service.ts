@@ -55,7 +55,7 @@ export class LocationService {
     const location = this.locationRepo.create({
       ...dto,
       devices,
-      user: { id: userId }, 
+      user: { id: userId },
     });
 
     return await this.locationRepo.save(location);
@@ -88,7 +88,7 @@ export class LocationService {
 
   async findOne(id: number, userId: number): Promise<Location> {
     const location = await this.locationRepo.findOne({
-      where: { id, user: { id: userId } }, 
+      where: { id, user: { id: userId } },
       relations: ['devices'],
     });
 
@@ -112,7 +112,7 @@ export class LocationService {
     userId: number,
   ) {
     const existingLocation = await this.locationRepo.findOne({
-      where: { id, user: { id: userId } }, 
+      where: { id, user: { id: userId } },
     });
 
     if (!existingLocation) {
@@ -125,7 +125,7 @@ export class LocationService {
 
   async remove(id: number, userId: number) {
     const location = await this.locationRepo.findOne({
-      where: { id, user: { id: userId } }, 
+      where: { id, user: { id: userId } },
       relations: ['devices'],
     });
 

@@ -2,12 +2,11 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  Inject,
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Device } from './entities/device.entity';
 import { Location } from '../location/entities/location.entity';
 import { deleteFile } from 'src/common/utils/file-utils';
@@ -35,7 +34,7 @@ export class DeviceService {
 
       const device = this.deviceRepo.create({
         ...dto,
-        location, 
+        location,
       });
 
       return await this.deviceRepo.save(device);
@@ -72,15 +71,15 @@ export class DeviceService {
       where: { id },
       relations: ['location'],
     });
-  
+
     if (!device) {
       throw new NotFoundException('Device not found');
     }
-  
+
     if (device.image) {
       device.image = `http://localhost:8080/${device.image}`;
     }
-  
+
     return device;
   }
 
@@ -94,15 +93,15 @@ export class DeviceService {
       throw new Error('Device not found');
     }
     if (dto.serialNumber && dto.serialNumber !== device.serialNumber) {
-    const existingDevice = await this.deviceRepo.findOne({
-      where: { serialNumber: dto.serialNumber },
-    });
-    if (existingDevice) {
-      throw new BadRequestException(
-        `A device with serial number '${dto.serialNumber}' already exists.`,
-      );
+      const existingDevice = await this.deviceRepo.findOne({
+        where: { serialNumber: dto.serialNumber },
+      });
+      if (existingDevice) {
+        throw new BadRequestException(
+          `A device with serial number '${dto.serialNumber}' already exists.`,
+        );
+      }
     }
-  }
     if (file && device.image) {
       console.log(`Deleting old image: ${device.image}`);
       deleteFile(device.image);
@@ -117,8 +116,6 @@ export class DeviceService {
     Object.assign(device, dto);
     return await this.deviceRepo.save(device);
   }
-
-
 
   async delete(deviceId: number): Promise<void> {
     const device = await this.deviceRepo.findOne({ where: { id: deviceId } });

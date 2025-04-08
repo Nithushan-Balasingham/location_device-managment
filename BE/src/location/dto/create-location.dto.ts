@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsNotEmpty, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsNotEmpty,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateDeviceDto } from 'src/device/dto/create-device.dto';
 
