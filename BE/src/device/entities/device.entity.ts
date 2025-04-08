@@ -1,5 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Image } from '../../images/entities/image.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Location } from '../../location/entities/location.entity';
 
 @Entity()
@@ -14,15 +13,11 @@ export class Device {
   type: 'pos' | 'kiosk' | 'signage';
 
   @Column({ nullable: true })
-  image: string;
+  image: string; // Store the file path here
 
   @Column({ default: 'Active' })
   status: 'Active' | 'InActive';
 
   @ManyToOne(() => Location, (location) => location.devices)
   location: Location;
-
-  @OneToOne(() => Image)
-  @JoinColumn()
-  thumbnail: Image;
 }

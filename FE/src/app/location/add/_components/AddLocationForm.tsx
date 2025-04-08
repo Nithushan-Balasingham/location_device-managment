@@ -66,12 +66,38 @@ const AddLocationForm = () => {
         throw new Error("No token found. Please log in again.");
       }
 
-      const data = await addLocation(token, values);
-      toast.success("Location added successfully!");
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
-      console.log("API Response:", data);
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("address", values.address);
+      formData.append("status", values.status);
+
+      values.deviceDto.forEach((device, index) => {
+        formData.append(`deviceDto[${index}][serialNumber]`, device.serialNumber);
+        formData.append(`deviceDto[${index}][type]`, device.type);
+        formData.append(`deviceDto[${index}][status]`, device.status);
+
+        const fileInput = document.querySelector(
+          `input[name="deviceDto[${index}][file]"]`
+        ) as HTMLInputElement;
+        if (fileInput?.files?.[0]) {
+          formData.append("file", fileInput.files[0]);
+        }
+      });
+
+      const response = await addLocation(token,formData);
+
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Location added successfully!");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
+        console.log("API Response:", data);
+      } else {
+        console.error("Error:", response.statusText);
+        toast.error("Failed to add location.");
+      }
     } catch (error) {
       toast.error(`Error: ${error.message}`);
       console.error("Error:", error);
@@ -189,6 +215,16 @@ const AddLocationForm = () => {
                   )}
                 />
               </FormControl>
+
+              <div>
+                <label htmlFor={`deviceDto[${index}][file]`}>Upload Image</label>
+                <input
+                  type="file"
+                  name={`deviceDto[${index}][file]`}
+                  id={`deviceDto[${index}][file]`}
+                  accept="image/*"
+                />
+              </div>
 
               <Button
                 type="button"

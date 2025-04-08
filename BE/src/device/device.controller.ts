@@ -41,15 +41,31 @@ export class DeviceController {
     return this.deviceService.findOne(+id);
   }
 
-  // @Patch(':id')
-  // @UseGuards(RtGuard)
-  // update(@Param('id') id: number, @Body() updateDeviceDto: UpdateDeviceDto) {
-  //   return this.deviceService.update(+id, updateDeviceDto);
-  // }
+  @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: path.join(__dirname, '../../uploads/devices'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${file.originalname}`;
+          cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async update(
+    @Param('id') id: number,
+    @Body() dto: UpdateDeviceDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<any> {
+    console.log(`Updating device with ID: ${id}`); 
+    console.log('Uploaded file:', file); 
+    return this.deviceService.update(id, dto, file);
+  }
 
   @Delete(':id')
-  @UseGuards(RtGuard)
-  remove(@Param('id') id: number) {
-    return this.deviceService.remove(+id);
+  async delete(@Param('id') id: number): Promise<void> {
+    console.log(`Deleting device with ID: ${id}`);
+    return this.deviceService.delete(id);
   }
 }

@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Location } from './entities/location.entity';
 import { DeviceService } from 'src/device/device.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class LocationService {
@@ -13,33 +13,51 @@ export class LocationService {
     private locationRepo: Repository<Location>,
     private deviceService: DeviceService,
   ) {}
-  async create(dto: CreateLocationDto, userId: number): Promise<Location> {
-    try {
-      if (!dto.deviceDto || dto.deviceDto.length === 0) {
-        throw new Error('No devices provided.');
-      }
-      const devices = await Promise.all(
-        dto.deviceDto.map(async (deviceDto) => {
-          const device = await this.deviceService.create(deviceDto);
-          return device;
-        }),
-      );
 
-      const location = this.locationRepo.create({
-        ...dto,
-        devices: devices,
-        user: { id: userId },
-      });
+  async create(
+    dto: CreateLocationDto,
+    files: Array<Express.Multer.File>,
+    userId: number,
+  ): Promise<Location> {
+    console.log('Files in service:', files); 
+    console.log('DTO:', dto); 
 
-      return await this.locationRepo.save(location);
-    } catch (error) {
-      console.error('Error creating location:', error);
-      throw new Error('Error creating location or devices.');
+    if (files.length !== dto.deviceDto.length) {
+      throw new Error('Number of files does not match the number of devices');
     }
+
+    const devices = await Promise.all(
+      dto.deviceDto.map((deviceDto, index) => {
+        const file = files[index]; 
+        if (file) {
+          console.log('File being processed:', file);
+          deviceDto.image = `uploads/devices/${file.filename}`; 
+        }
+        return this.deviceService.create(deviceDto);
+      }),
+    );
+
+    const location = this.locationRepo.create({
+      ...dto,
+      devices,
+      user: { id: userId },
+    });
+
+    return await this.locationRepo.save(location);
   }
 
-  findAll() {
-    return this.locationRepo.find({ relations: ['devices'] });
+  async findAll(): Promise<Location[]> {
+    const locations = await this.locationRepo.find({ relations: ['devices'] });
+
+    return locations.map((location) => {
+      location.devices = location.devices.map((device) => {
+        if (device.image) {
+          device.image = `http://localhost:8080/${device.image}`; 
+        }
+        return device;
+      });
+      return location;
+    });
   }
 
   async findOne(id: number) {

@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { LocationService } from './location.service';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -20,31 +21,23 @@ import { Observable, of } from 'rxjs';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
-import { FileInterceptor } from '@nestjs/platform-express';
-// export const storage = {
-//   storage: diskStorage({
-//     destination: './uploads/profileimages',
-//     filename: (req, file, cb) => {
-//       const filename: string =
-//         path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
-//       const extension: string = path.parse(file.originalname).ext;
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
-//       cb(null, `${filename}${extension}`);
-//     },
-//   }),
-// };
 @Controller('location')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
   @Post()
   @UseGuards(RtGuard)
+  @UseInterceptors(FilesInterceptor('file')) 
   create(
-    @GetCurrentUserId() userId: number,
-    @UploadedFile() file,
     @Body() dto: CreateLocationDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @GetCurrentUserId() userId: number,
   ) {
-    return this.locationService.create(dto, userId);
+    console.log('Files received:', files); 
+
+    return this.locationService.create(dto, files, userId);
   }
 
   @Get()
@@ -58,12 +51,7 @@ export class LocationController {
   findOne(@Param('id') id: number) {
     return this.locationService.findOne(+id);
   }
-  // @Post('upload')
-  // @UseInterceptors(FileInterceptor('file', storage))
-  // uploadFile(@UploadedFile() file): Observable<any> {
-  //   console.log('File', file);
-  //   return of({ imagePath: file.path });
-  // }
+
   @Patch(':id')
   @UseGuards(RtGuard)
   update(

@@ -1,7 +1,8 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException, Inject
+  NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
@@ -9,8 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Device } from './entities/device.entity';
 import { Location } from '../location/entities/location.entity';
-import { Image } from 'src/images/entities/image.entity';
-import { ImageService } from 'src/images/image.service';
+import { deleteFile } from 'src/common/utils/file-utils';
 
 @Injectable()
 export class DeviceService {
@@ -20,28 +20,15 @@ export class DeviceService {
     @InjectRepository(Location)
     private locationRepo: Repository<Location>,
   ) {}
-  // async create(dto: CreateDeviceDto): Promise<{ message: string }> {
-  //   const location = await this.locationRepo.findOne({
-  //     where: { id: Number(dto.locationId) },
-  //     relations: ['devices'],
-  //   });
 
-  //   if (!location) throw new NotFoundException('Location not found');
-  //   if (location.devices.length >= 10)
-  //     throw new BadRequestException('Cannot add more than 10 devices');
-  //   const existingDevice = await this.deviceRepo.findOne({
-  //     where: { serialNumber: dto.serialNumber },
-  //   });
-  //   if (existingDevice) {
-  //     throw new BadRequestException('Device is already added');
-  //   }
-  //   const device = this.deviceRepo.create({ ...dto, location });
-  //   await this.deviceRepo.save(device);
-  //   return { message: 'Device is added successfully successfully' };
-  // }
-  async create(dto: CreateDeviceDto, ): Promise<Device> {
-    const device = this.deviceRepo.create(dto);
-    return await this.deviceRepo.save(device);
+  async create(dto: CreateDeviceDto): Promise<Device> {
+    try {
+      const device = this.deviceRepo.create(dto);
+      return await this.deviceRepo.save(device);
+    } catch (error) {
+      console.error('Error creating device:', error);
+      throw error;
+    }
   }
   findAll() {
     return this.deviceRepo.find({ relations: ['location'] });
@@ -57,29 +44,31 @@ export class DeviceService {
     }
     return this.deviceRepo.findOne({ where: { id } });
   }
-  // async update(id: number, updateDeviceDto: UpdateDeviceDto) {
-  //   if (!id) {
-  //     throw new NotFoundException('Device is not found');
-  //   }
 
-  //   const exitingDevice = await this.deviceRepo.findOne({
-  //     where: { id },
-  //   });
+  async update(
+    deviceId: number,
+    dto: UpdateDeviceDto,
+    file?: Express.Multer.File,
+  ): Promise<Device> {
+    const device = await this.deviceRepo.findOne({ where: { id: deviceId } });
+    if (!device) {
+      throw new Error('Device not found');
+    }
 
-  //   const isLocationExist = await this.locationRepo.findOne({
-  //     where: { id: updateDeviceDto.locationId },
-  //   });
+    if (file && device.image) {
+      console.log(`Deleting old image: ${device.image}`);
+      deleteFile(device.image);
+    }
 
-  //   if (!isLocationExist) {
-  //     throw new NotFoundException('Location not found');
-  //   }
-  //   if (!exitingDevice) {
-  //     throw new NotFoundException('Location not found');
-  //   }
-  //   exitingDevice.location = isLocationExist;
-  //   Object.assign(exitingDevice, updateDeviceDto);
-  //   return this.deviceRepo.save(exitingDevice);
-  // }
+    if (file) {
+      console.log('Uploaded file details:', file);
+      dto.image = `uploads/devices/${file.filename}`;
+      console.log(`New image path: ${dto.image}`);
+    }
+
+    Object.assign(device, dto);
+    return await this.deviceRepo.save(device);
+  }
 
   async remove(id: number) {
     if (!id) {
@@ -92,5 +81,19 @@ export class DeviceService {
     }
     await this.deviceRepo.delete(id);
     return { message: 'Device is deleted successfully' };
+  }
+
+  async delete(deviceId: number): Promise<void> {
+    const device = await this.deviceRepo.findOne({ where: { id: deviceId } });
+    if (!device) {
+      throw new Error('Device not found');
+    }
+
+    if (device.image) {
+      console.log(`Deleting image for device: ${device.image}`);
+      deleteFile(device.image);
+    }
+
+    await this.deviceRepo.delete(deviceId);
   }
 }

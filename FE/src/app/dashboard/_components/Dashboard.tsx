@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchLocation } from "@/app/api/location";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface LocationData {
   id: number;
@@ -16,6 +17,7 @@ interface LocationData {
     status: string;
     type: string;
     location: string;
+    image: string;
     serialNumber: string;
   }[];
   [key: string]: any;
@@ -111,6 +113,8 @@ export default function Dashboard() {
                           <p className="text-sm text-gray-600">
                             Type: {device.type}
                           </p>
+                          {/* <Image src={`${device.image}`} alt={device.type} width={50} height={50} className="mt-2" /> */}
+                          <Image src={device.image} alt="Image" width={200} height={200} />
                         </div>
                         <div className="cursor-pointer">✏️</div>
                       </div>

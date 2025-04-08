@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080', 
+  baseURL: process.env.NEXT_PUBLIC_API_URL, 
 });
 
 export const fetchLocation = async (token:string) => {
@@ -25,7 +25,7 @@ export const addLocation = async (token: string, values: any) => {
         'Content-Type': 'application/json',
       },
     });
-    return response.data; // Returning the response data (if any)
+    return response.data;
   } catch (error) {
     throw new Error('Error adding location: ' + error.message);
   }
